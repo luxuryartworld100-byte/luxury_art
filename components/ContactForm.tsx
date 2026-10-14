@@ -8,53 +8,56 @@ export function ContactForm() {
   const [notice, setNotice] = useState("");
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    setStatus("sending");
-    setNotice("");
+  event.preventDefault();
+  const form = event.currentTarget;
+  const data = new FormData(form);
+  setStatus("sending");
+  setNotice("");
 
-    const formId = process.env.NEXT_PUBLIC_FORMSPREE_ID?.trim();
-    if (!formId) {
-      setStatus("error");
-      setNotice("The enquiry form is not connected yet. Please try again shortly.");
-      return;
-    }
-    const endpoint = formId.startsWith("https://") ? formId : `https://formspree.io/f/${formId}`;
-    const email = String(data.get("email") || "");
-    const piece = String(data.get("piece") || "");
+  const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_KEY?.trim();
+  if (!accessKey) {
+    setStatus("error");
+    setNotice("The enquiry form is not connected yet. Please try again shortly.");
+    return;
+  }
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.get("name"),
-          phone: data.get("phone"),
-          email,
-          piece,
-          message: data.get("message"),
-          _replyto: email,
-          _subject: `Order enquiry: ${piece}`,
-        }),
-      });
-      const result = (await response.json().catch(() => null)) as {
-        error?: string;
-        errors?: { message?: string }[];
-      } | null;
-      if (!response.ok) {
-        setStatus("error");
-        setNotice(result?.errors?.[0]?.message || result?.error || "The enquiry could not be sent. Please try again.");
-        return;
-      }
+  const email = String(data.get("email") || "");
+  const piece = String(data.get("piece") || "");
+
+  try {
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        access_key: accessKey,
+        name: data.get("name"),
+        phone: data.get("phone"),
+        email,
+        piece,
+        message: data.get("message"),
+        subject: `Order enquiry: ${piece}`,
+        from_name: "Luxury Art World",
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
       form.reset();
       setStatus("sent");
       setNotice("Sent. Your enquiry is on its way to luxuryartworld100@gmail.com.");
-    } catch {
+    } else {
       setStatus("error");
-      setNotice("The enquiry could not be sent. Please try again.");
+      setNotice(result.message || "The enquiry could not be sent. Please try again.");
     }
+  } catch {
+    setStatus("error");
+    setNotice("The enquiry could not be sent. Please try again.");
   }
+}
 
   return (
     <form className="form" onSubmit={onSubmit}>
