@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -46,6 +47,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ["--serif" as string]: "var(--font-serif), Cormorant Garamond, serif",
         }}
       >
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-HWF205MHX6"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-HWF205MHX6');
+          `}
+        </Script>
         <a className="skip" href="#content">
           Skip to content
         </a>
